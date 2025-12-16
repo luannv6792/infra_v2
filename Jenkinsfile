@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = 'abc'
-        DOCKERHUB_USER = 'dockerhubuser'
+        DOCKERHUB_CREDENTIALS = 'dockerhub'
+        DOCKERHUB_USER = 'luannv67922'
     }
 
     stages {
