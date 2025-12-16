@@ -4,22 +4,16 @@ import DeployChart from "../components/DeployChart";
 import { useAuth } from "../auth/AuthContext";
 import { api } from "../api/client";
 
-type DeploymentToday = {
-  application: string;
-  environment: string;
-  total: number;
-};
-
 export default function Dashboard() {
   const { user } = useAuth();
 
-  const [data, setData] = useState<DeploymentToday[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!user) return;
 
-    api<DeploymentToday[]>("/api/deployments/today", user.token)
+    api("/api/deployments/today", user.token)
       .then(setData)
       .catch(err => {
         console.error(err);
@@ -27,8 +21,8 @@ export default function Dashboard() {
       });
   }, [user]);
 
-  if (error) return <p>Error: {error}</p>;
   if (!user) return <p>Please login</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div style={{ padding: 24 }}>
