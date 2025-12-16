@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infraback
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infraback
+  template:
+    metadata:
+      labels:
+        app: infraback
+    spec:
+      containers:
+        - name: infraback
+          image: dockerhubuser/infraback:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_HOST
+              value: postgres.dbcenter.svc.cluster.local
+            - name: DATABASE_USER
+              value: postgres
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: DATABASE_NAME
+              value: deploy_monitor
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: infraback
+  namespace: app
+spec:
+  selector:
+    app: infraback
+  ports:
+    - port: 8000
+      targetPort: 8000
