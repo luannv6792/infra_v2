@@ -1,115 +1,85 @@
-from datetime import date
-from fastapi import FastAPI, HTTPException, Query
-
+from fastapi import FastAPI, HTTPException, Depends
 from .schemas import (
+    LoginRequest,
+    LoginResponse,
     DeploymentCreate,
     DeploymentToday,
-    DeploymentReport
+    DeploymentReport,
 )
 from .models import (
+    get_user_by_username,
     get_application_id,
     get_environment_id,
     insert_deployment,
     get_today_deployments,
-    get_monthly_report,
-    get_yearly_report
 )
+from .auth import verify_password, create_access_token
+from .dependencies import require_admin, get_current_user
 
-app = FastAPI(
-    title="Deploy Monitor Backend",
-    version="1.1.0"
-)
+app = FastAPI(title="Deploy Monitor Backend", version="1.2.0")
 
 
-# --------------------------------------------------
-# HEALTH CHECK
-# --------------------------------------------------
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 
-# --------------------------------------------------
-# SLICE 1 – CREATE DEPLOYMENT
-# --------------------------------------------------
-@app.post("/api/deployments")
-def create_deployment(payload: DeploymentCreate):
-    try:
-        app_id = get_application_id(payload.application)
-        env_id = get_environment_id(payload.environment)
+# -----------------------------
+# AUTH
+# -----------------------------
+@app.post("/api/auth/login", response_model=LoginResponse)
+def login(payload: LoginRequest):
+    user = get_user_by_username(payload.username)
+    if not user or not verify_password(
+        payload.password, user["password_hash"]
+    ):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-        insert_deployment(
-            application_id=app_id,
-            environment_id=env_id,
-            status=payload.status
-        )
-
-        return {"message": "Deployment recorded"}
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+    token = create_access_token(
+        {"username": user["username"], "role": user["role"]}
+    )
+    return {"access_token": token, "role": user["role"]}
 
 
-# --------------------------------------------------
-# SLICE 1 – TODAY DASHBOARD
-# --------------------------------------------------
+# -----------------------------
+# DEPLOYMENTS (DEV + ADMIN)
+# -----------------------------
 @app.get(
     "/api/deployments/today",
-    response_model=list[DeploymentToday]
+    response_model=list[DeploymentToday],
 )
-def deployments_today():
-    try:
-        rows = get_today_deployments()
-        return [
-            {
-                "application": r[0],
-                "environment": r[1],
-                "total": r[2]
-            }
-            for r in rows
-        ]
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+def deployments_today(user=Depends(get_current_user)):
+    rows = get_today_deployments()
+    return [
+        {"application": r[0], "environment": r[1], "total": r[2]}
+        for r in rows
+    ]
 
 
-# --------------------------------------------------
-# SLICE 2 – MONTHLY REPORT
-# --------------------------------------------------
+@app.post("/api/deployments")
+def create_deployment(
+    payload: DeploymentCreate, user=Depends(get_current_user)
+):
+    app_id = get_application_id(payload.application)
+    env_id = get_environment_id(payload.environment)
+    insert_deployment(app_id, env_id, payload.status)
+    return {"message": "Deployment recorded"}
+
+
+# -----------------------------
+# REPORTS (ADMIN ONLY)
+# -----------------------------
 @app.get(
     "/api/reports/monthly",
-    response_model=list[DeploymentReport]
+    response_model=list[DeploymentReport],
 )
-def report_monthly(
-    month: date = Query(..., description="Format: YYYY-MM-01")
-):
-    try:
-        return get_monthly_report(month)
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+def report_monthly(user=Depends(require_admin)):
+    raise HTTPException(status_code=501, detail="Not wired to UI yet")
 
 
-# --------------------------------------------------
-# SLICE 2 – YEARLY REPORT
-# --------------------------------------------------
 @app.get(
     "/api/reports/yearly",
-    response_model=list[DeploymentReport]
+    response_model=list[DeploymentReport],
 )
-def report_yearly(
-    year: int = Query(..., ge=2000, le=2100)
-):
-    try:
-        return get_yearly_report(year)
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+def report_yearly(user=Depends(require_admin)):
+    raise HTTPException(status_code=501, detail="Not wired to UI yet")
