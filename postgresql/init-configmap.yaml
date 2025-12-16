@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: dbcenter
+data:
+  01_schema.sql: |
+    -- nội dung copy từ file 01_schema.sql
+  02_seed.sql: |
+    -- nội dung copy từ file 02_seed.sql
+  03_baseline_view.sql: |
+    -- nội dung copy từ file 03_baseline_view.sql
