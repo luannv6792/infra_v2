@@ -1,21 +1,27 @@
-import { useTheme } from "../theme/ThemeContext";
+import { useAuth } from "../auth/AuthContext";
 
 export default function Topbar() {
-  const { theme, toggle } = useTheme();
+  const { user, logout } = useAuth();
+
+  if (!user) return null;
 
   return (
-    <div style={{
-      padding: "12px 24px",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      borderBottom: "1px solid var(--muted)"
-    }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        padding: "12px 24px",
+        borderBottom: "1px solid #e5e7eb",
+      }}
+    >
       <strong>Deploy Monitor</strong>
 
-      <button onClick={toggle}>
-        {theme === "light" ? "🌙 Dark" : "☀️ Light"}
-      </button>
+      <div>
+        <span style={{ marginRight: 12 }}>
+          Role: <b>{user.role}</b>
+        </span>
+        <button onClick={logout}>Logout</button>
+      </div>
     </div>
   );
 }
