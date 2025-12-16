@@ -1,15 +1,24 @@
 import { createContext, useContext, useState } from "react";
 
-type User = { token: string; role: "admin" | "developer" } | null;
+type User = {
+  token: string;
+  role: "admin" | "developer";
+};
 
-const AuthContext = createContext({
-  user: null as User,
-  login: (u: User) => {},
+type AuthContextType = {
+  user: User | null;
+  login: (u: User) => void;
+  logout: () => void;
+};
+
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  login: () => {},
   logout: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User>(() => {
+  const [user, setUser] = useState<User | null>(() => {
     const raw = localStorage.getItem("auth");
     return raw ? JSON.parse(raw) : null;
   });
