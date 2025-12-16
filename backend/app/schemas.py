@@ -2,7 +2,20 @@ from pydantic import BaseModel
 
 
 # -----------------------------
-# SLICE 1 – CREATE DEPLOYMENT
+# AUTH
+# -----------------------------
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    role: str
+
+
+# -----------------------------
+# DEPLOYMENT
 # -----------------------------
 class DeploymentCreate(BaseModel):
     application: str
@@ -17,7 +30,7 @@ class DeploymentToday(BaseModel):
 
 
 # -----------------------------
-# SLICE 2 – REPORT
+# REPORT
 # -----------------------------
 class DeploymentReport(BaseModel):
     application: str
