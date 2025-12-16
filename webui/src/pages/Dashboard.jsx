@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import DeployTable from "../components/DeployTable";
-import DeployChart from "../components/DeployChart";
-import AlertBanner from "../components/AlertBanner";
 import { useAuth } from "../auth/AuthContext";
 import { api } from "../api/client";
+import Layout from "../components/Layout";
+import Card from "../components/Card";
+import DeployChart from "../components/DeployChart";
+import DeployTable from "../components/DeployTable";
+import AlertBanner from "../components/AlertBanner";
 
 export default function Dashboard() {
   const { user } = useAuth();
-
   const [data, setData] = useState([]);
   const [alert, setAlert] = useState(null);
   const [error, setError] = useState(null);
@@ -19,24 +20,25 @@ export default function Dashboard() {
       .then(setData)
       .catch(() => setError("Failed to fetch deployments"));
 
-    // Alert today (admin only)
     if (user.role === "admin") {
       api("/api/alerts/today", user.token).then(setAlert);
     }
   }, [user]);
 
   if (!user) return null;
-  if (error) return <p>Error: {error}</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <div style={{ padding: 24 }}>
+    <Layout>
       <AlertBanner alert={alert} />
 
-      <h2>Deployments Today</h2>
-      <DeployChart data={data} />
+      <Card title="Deployments Today">
+        <DeployChart data={data} />
+      </Card>
 
-      <h3>Details</h3>
-      <DeployTable data={data} />
-    </div>
+      <Card title="Details">
+        <DeployTable data={data} />
+      </Card>
+    </Layout>
   );
 }
