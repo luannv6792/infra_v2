@@ -18,14 +18,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return saved === "dark" ? "dark" : "light";
   });
 
-  // 🔑 APPLY THEME TO <body> (NOT <html>)
+  // 🔑 APPLY THEME USING data-theme (MATCH CSS)
   useEffect(() => {
     const body = document.body;
 
     if (theme === "dark") {
-      body.classList.add("dark");
+      body.setAttribute("data-theme", "dark");
     } else {
-      body.classList.remove("dark");
+      body.removeAttribute("data-theme");
     }
 
     localStorage.setItem("theme", theme);
