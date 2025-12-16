@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: infraweb
-          image: dockerhubuser/infraweb:latest
+          image: dockerhub/infraweb:latest
           ports:
             - containerPort: 80
 ---
