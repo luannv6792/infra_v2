@@ -4,12 +4,45 @@ metadata:
   name: postgres-init-sql
   namespace: dbcenter
 data:
-  01_init.sql: |
-    CREATE TABLE IF NOT EXISTS hello (
+  01_schema.sql: |
+    CREATE TABLE IF NOT EXISTS application (
         id SERIAL PRIMARY KEY,
-        message TEXT NOT NULL
+        name TEXT NOT NULL UNIQUE
     );
 
-    INSERT INTO hello(message)
-    SELECT 'Hello from PostgreSQL'
-    WHERE NOT EXISTS (SELECT 1 FROM hello);
+    CREATE TABLE IF NOT EXISTS environment (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS deployment (
+        id BIGSERIAL PRIMARY KEY,
+        application_id INT REFERENCES application(id),
+        environment_id INT REFERENCES environment(id),
+        deploy_time TIMESTAMP NOT NULL,
+        status TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_deployment_time
+    ON deployment(deploy_time);
+
+  02_seed.sql: |
+    INSERT INTO environment(name)
+    VALUES ('sit'), ('uat'), ('stg'), ('prod')
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO application(name)
+    VALUES ('demo-app')
+    ON CONFLICT DO NOTHING;
+
+  03_baseline_view.sql: |
+    CREATE OR REPLACE VIEW deployment_today AS
+    SELECT
+        a.name AS application,
+        e.name AS environment,
+        COUNT(*) AS total
+    FROM deployment d
+    JOIN application a ON d.application_id = a.id
+    JOIN environment e ON d.environment_id = e.id
+    WHERE d.deploy_time::date = CURRENT_DATE
+    GROUP BY a.name, e.name;
