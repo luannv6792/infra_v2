@@ -18,14 +18,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return saved === "dark" ? "dark" : "light";
   });
 
-  // 🔑 APPLY THEME TO <html>
+  // 🔑 APPLY THEME TO <body> (NOT <html>)
   useEffect(() => {
-    const root = document.documentElement;
+    const body = document.body;
 
     if (theme === "dark") {
-      root.classList.add("dark");
+      body.classList.add("dark");
     } else {
-      root.classList.remove("dark"); // 🔥 DÒNG QUAN TRỌNG BỊ THIẾU TRƯỚC ĐÓ
+      body.classList.remove("dark");
     }
 
     localStorage.setItem("theme", theme);
