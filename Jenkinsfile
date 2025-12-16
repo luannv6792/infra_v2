@@ -39,7 +39,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
+                kubectl delete -n app -f k8s/backend.yaml
                 kubectl apply -n app -f k8s/backend.yaml
+                kubectl delete -n app -f k8s/webui.yaml
                 kubectl apply -n app -f k8s/webui.yaml
                 '''
             }
