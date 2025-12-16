@@ -1,11 +1,13 @@
-from pydantic import BaseModel
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import { ThemeProvider } from "./theme/ThemeContext";
+import "./index.css";
 
-class DeploymentCreate(BaseModel):
-    application: str
-    environment: str
-    status: str  # success | failed (chưa validate gắt ở slice 1)
-
-class DeploymentToday(BaseModel):
-    application: str
-    environment: str
-    total: int
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  </React.StrictMode>
+);
