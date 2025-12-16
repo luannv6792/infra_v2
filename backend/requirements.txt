@@ -3,6 +3,7 @@ uvicorn[standard]
 psycopg2-binary
 python-dotenv
 
-# Auth
-passlib[bcrypt]
-python-jose
+# ---- AUTH (PINNED VERSIONS – IMPORTANT) ----
+passlib==1.7.4
+bcrypt==4.0.1
+python-jose==3.3.0
