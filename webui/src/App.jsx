@@ -1,5 +1,11 @@
 import Dashboard from "./pages/Dashboard";
+import Topbar from "./components/Topbar";
 
 export default function App() {
-  return <Dashboard />;
+  return (
+    <>
+      <Topbar />
+      <Dashboard />
+    </>
+  );
 }
