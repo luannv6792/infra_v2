@@ -1,8 +1,8 @@
-export async function api<T>(
+export async function api(
   url: string,
   token?: string,
   options: RequestInit = {}
-): Promise<T> {
+) {
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -11,6 +11,17 @@ export async function api<T>(
       ...options.headers,
     },
   });
-  if (!res.ok) throw new Error(await res.text());
+
+  // 🔴 AUTO LOGOUT WHEN JWT EXPIRED
+  if (res.status === 401) {
+    localStorage.removeItem("auth");
+    window.location.reload(); // quay về Login
+    throw new Error("Unauthorized");
+  }
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
   return res.json();
 }
