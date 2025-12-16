@@ -1,4 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
+from psycopg2.extras import RealDictCursor
+from .db import get_connection
+from .dependencies import get_current_user, require_admin
 from .schemas import (
     LoginRequest,
     LoginResponse,
@@ -14,9 +17,8 @@ from .models import (
     get_today_deployments,
 )
 from .auth import verify_password, create_access_token
-from .dependencies import require_admin, get_current_user
 
-app = FastAPI(title="Deploy Monitor Backend", version="1.2.0")
+app = FastAPI(title="Deploy Monitor Backend", version="1.3.0")
 
 
 @app.get("/health")
@@ -42,7 +44,7 @@ def login(payload: LoginRequest):
 
 
 # -----------------------------
-# DEPLOYMENTS (DEV + ADMIN)
+# DEPLOYMENTS TODAY
 # -----------------------------
 @app.get(
     "/api/deployments/today",
@@ -56,30 +58,42 @@ def deployments_today(user=Depends(get_current_user)):
     ]
 
 
-@app.post("/api/deployments")
-def create_deployment(
-    payload: DeploymentCreate, user=Depends(get_current_user)
-):
-    app_id = get_application_id(payload.application)
-    env_id = get_environment_id(payload.environment)
-    insert_deployment(app_id, env_id, payload.status)
-    return {"message": "Deployment recorded"}
+# -----------------------------
+# ALERT TODAY (ADMIN ONLY)
+# -----------------------------
+@app.get("/api/alerts/today")
+def alert_today(user=Depends(require_admin)):
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT
+                  COUNT(*) AS failed_count,
+                  ARRAY_AGG(DISTINCT a.name) AS applications
+                FROM deployment d
+                JOIN application a ON d.application_id = a.id
+                WHERE d.status = 'failed'
+                  AND d.deploy_time >= date_trunc('day', now())
+                """
+            )
+            row = cur.fetchone()
+
+    failed_count = row["failed_count"] or 0
+    return {
+        "has_failed": failed_count > 0,
+        "failed_count": failed_count,
+        "applications": row["applications"] or [],
+    }
 
 
 # -----------------------------
 # REPORTS (ADMIN ONLY)
 # -----------------------------
-@app.get(
-    "/api/reports/monthly",
-    response_model=list[DeploymentReport],
-)
+@app.get("/api/reports/monthly", response_model=list[DeploymentReport])
 def report_monthly(user=Depends(require_admin)):
-    raise HTTPException(status_code=501, detail="Not wired to UI yet")
+    raise HTTPException(status_code=501, detail="Not implemented yet")
 
 
-@app.get(
-    "/api/reports/yearly",
-    response_model=list[DeploymentReport],
-)
+@app.get("/api/reports/yearly", response_model=list[DeploymentReport])
 def report_yearly(user=Depends(require_admin)):
-    raise HTTPException(status_code=501, detail="Not wired to UI yet")
+    raise HTTPException(status_code=501, detail="Not implemented yet")
