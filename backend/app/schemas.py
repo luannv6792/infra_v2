@@ -1,13 +1,27 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import { ThemeProvider } from "./theme/ThemeContext";
-import "./index.css";
+from pydantic import BaseModel
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
-  </React.StrictMode>
-);
+
+# -----------------------------
+# SLICE 1 – CREATE DEPLOYMENT
+# -----------------------------
+class DeploymentCreate(BaseModel):
+    application: str
+    environment: str
+    status: str
+
+
+class DeploymentToday(BaseModel):
+    application: str
+    environment: str
+    total: int
+
+
+# -----------------------------
+# SLICE 2 – REPORT
+# -----------------------------
+class DeploymentReport(BaseModel):
+    application: str
+    environment: str
+    total: int
+    success: int
+    failed: int
