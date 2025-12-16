@@ -1,17 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { createRoot } from "react-dom/client";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
 
-const App = () => {
-  const [msg, setMsg] = useState("Loading...");
-
-  useEffect(() => {
-    fetch("/api/hello")
-      .then(res => res.json())
-      .then(data => setMsg(data.message))
-      .catch(() => setMsg("Backend not reachable"));
-  }, []);
-
-  return <h1>{msg}</h1>;
-};
-
-createRoot(document.getElementById("root")!).render(<App />);
+// Entry point của WebUI
+// KHÔNG gọi API ở đây
+// Chỉ mount React App
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
